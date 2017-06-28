@@ -1,5 +1,6 @@
 package org.mylearn.chapter1.helper;
 
+import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
@@ -10,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,70 +24,57 @@ public class DatabaseHelper {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DatabaseHelper.class);
 
-    private static final QueryRunner QUERY_RUNNER = new QueryRunner();
+    private static final QueryRunner QUERY_RUNNER;
+
+    private static final ThreadLocal<Connection> CONNECTION_HOLDER;
 
     /**
-     * 使用ThreadLocal存放本地线程变量来确保一个线程中只有一个Connection
-     * 则这些Connection不会出现线程不安全问题
+     * 数据库连接池
      */
-    private static final ThreadLocal<Connection> CONNECTION_HOLDER = new ThreadLocal<Connection>();
-
-    private static final String DRIVER;
-    private static final String URL;
-    private static final String USERNAME;
-    private static final String PASSWORD;
+    private static final BasicDataSource DATA_SOURCE;
 
     static {
-        Properties conf = PropsUtil.loadProps("config.properties");
-        DRIVER = conf.getProperty("jdbc.driver");
-        URL = conf.getProperty("jdbc.url");
-        USERNAME = conf.getProperty("jdbc.username");
-        PASSWORD = conf.getProperty("jdbc.password");
+        CONNECTION_HOLDER = new ThreadLocal<Connection>();
 
-        try {
-            Class.forName(DRIVER);
-        } catch (ClassNotFoundException e) {
-            LOGGER.error("can not load jdbc driver", e);
-        }
+        QUERY_RUNNER = new QueryRunner();
+
+        Properties conf = PropsUtil.loadProps("config.properties");
+        String driver = conf.getProperty("jdbc.driver");
+        String url = conf.getProperty("jdbc.url");
+        String username = conf.getProperty("jdbc.username");
+        String password = conf.getProperty("jdbc.password");
+
+        DATA_SOURCE = new BasicDataSource();
+        DATA_SOURCE.setDriverClassName(driver);
+        DATA_SOURCE.setUrl(url);
+        DATA_SOURCE.setUsername(username);
+        DATA_SOURCE.setPassword(password);
     }
+
 
     public static Connection getConnection() {
         Connection conn = CONNECTION_HOLDER.get();
-        try {
-            conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
-        } catch (SQLException e) {
-            LOGGER.error("get connection failure", e);
-            throw new RuntimeException(e);
-        } finally {
-            CONNECTION_HOLDER.set(conn);
-        }
-        return conn;
-    }
-
-    public static void closeConnection() {
-        Connection conn = CONNECTION_HOLDER.get();
-        if (conn != null) {
+        if (conn == null) {
             try {
-                conn.close();
+                conn = DATA_SOURCE.getConnection();
             } catch (SQLException e) {
-                LOGGER.error("close connection failure", e);
+                LOGGER.error("get connection failure", e);
                 throw new RuntimeException(e);
             } finally {
-                CONNECTION_HOLDER.remove();
+                CONNECTION_HOLDER.set(conn);
             }
         }
+        return conn;
     }
 
     public static <T> List<T> queryEntityList(Class<T> entityClass, String sql, Object... params) {
         List<T> entityList;
         try {
-            Connection conn = getConnection();
+            Connection conn = DATA_SOURCE.getConnection();
             entityList = QUERY_RUNNER.query(conn, sql, new BeanListHandler<T>(entityClass), params);
         } catch (SQLException e) {
             LOGGER.error("query entity list failure", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return entityList;
     }
@@ -95,13 +82,11 @@ public class DatabaseHelper {
     public static <T> T queryEntity(Class<T> entityClass, String sql, Object... params) {
         T entity;
         try {
-            Connection conn = getConnection();
+            Connection conn = DATA_SOURCE.getConnection();
             entity = QUERY_RUNNER.query(conn, sql, new BeanHandler<T>(entityClass), params);
         } catch (SQLException e) {
             LOGGER.error("query entity failure", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return entity;
     }
@@ -109,7 +94,7 @@ public class DatabaseHelper {
     public static List<Map<String, Object>> executeQuery(String sql, Object... params) {
         List<Map<String, Object>> result;
         try {
-            Connection conn = getConnection();
+            Connection conn = DATA_SOURCE.getConnection();
             result = QUERY_RUNNER.query(conn, sql, new MapListHandler(), params);
         } catch (Exception e) {
             LOGGER.error("execute query failure", e);
@@ -121,13 +106,11 @@ public class DatabaseHelper {
     public static int executeUpdate(String sql, Object... params) {
         int rows = 0;
         try {
-            Connection conn = getConnection();
+            Connection conn = DATA_SOURCE.getConnection();
             rows = QUERY_RUNNER.update(conn, sql, params);
         } catch (SQLException e) {
             LOGGER.error("execute update failure", e);
             throw new RuntimeException(e);
-        } finally {
-            closeConnection();
         }
         return rows;
     }
@@ -175,7 +158,7 @@ public class DatabaseHelper {
     }
 
     public static <T> boolean deleteEntity(Class<T> entityClass, int id) {
-        String sql = "DELETE FROM " +getTableName(entityClass) + " WHERE id = ?";
+        String sql = "DELETE FROM " + getTableName(entityClass) + " WHERE id = ?";
         return executeUpdate(sql, id) == 1;
     }
 
