@@ -10,6 +10,10 @@ import org.mylearn.chapter1.util.PropsUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -164,5 +168,26 @@ public class DatabaseHelper {
 
     private static String getTableName(Class<?> entityClass) {
         return entityClass.getSimpleName();
+    }
+
+    /**
+     * 执行 SQL 文件
+     */
+    public static void executeSqlFile(String filePath) {
+        /**
+         * 从当前线程中获取线程上下文的ClassLoader，通过 classpath下的sql/customer_init.sql获取一个InputStream对象，
+         * 通过该输入流来创建BufferedReader对象，循环读取每一行，并调用DatabaseHelper的executeUpdate方法执行每一条SQL
+         */
+        InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(filePath);
+        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+        try {
+            String sql;
+            while ((sql=reader.readLine()) != null) {
+                executeUpdate(sql);
+            }
+        } catch (IOException e) {
+            LOGGER.error("execute sql file failure", e);
+            throw new RuntimeException(e);
+        }
     }
 }

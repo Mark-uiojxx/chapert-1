@@ -3,9 +3,11 @@ package org.mylearn.chapter1.test;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mylearn.chapter1.helper.DatabaseHelper;
 import org.mylearn.chapter1.model.Customer;
 import org.mylearn.chapter1.service.CustomerService;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,8 +24,8 @@ public class CustomerServiceTest {
     }
 
     @Before
-    public void init() {
-        //TODO 初始化数据库
+    public void init() throws IOException {
+        DatabaseHelper.executeSqlFile("sql/customer_init.sql");
     }
 
     @Test
@@ -45,7 +47,7 @@ public class CustomerServiceTest {
         fieldMap.put("name", "金基德");
         fieldMap.put("contact", "John");
         fieldMap.put("telephone", "1241324132");
-        fieldMap.put("email", "kinkikid900@1633.com");
+        fieldMap.put("email", "kinkid900@1633.com");
         fieldMap.put("remark", "《春夏秋冬又一春》");
         boolean result = customerService.createCustomer(fieldMap);
         Assert.assertTrue(result);
