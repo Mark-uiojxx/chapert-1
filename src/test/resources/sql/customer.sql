@@ -32,5 +32,5 @@ CREATE TABLE `customer` (
 -- ----------------------------
 -- Records of customer
 -- ----------------------------
-INSERT INTO `customer` VALUES ('1', 'Kobe', 'Wanisa', '343578784545', 'kobe@hahhah.com', 'AAAAAAAAAA');
-INSERT INTO `customer` VALUES ('2', 'Curry', 'Aotanio', '798795456', 'curry@79870.com', 'BBBBBBBBB');
+INSERT INTO `customer` VALUES ('1', '朴赞郁', 'Jack', '12345678901', 'piaozanyu@mee.com', '《老男孩》');
+INSERT INTO `customer` VALUES ('2', '奉俊昊', 'Mark', '22345678901', 'fengjunhao@mee.com', '《杀人回忆》');

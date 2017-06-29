@@ -29,7 +29,7 @@ public class CustomerServiceTest {
     @Test
     public void getCustomerListTest() throws Exception {
         List<Customer> customerList = customerService.getCustomerList();
-        Assert.assertEquals(2,customerList.size());
+        Assert.assertTrue(customerList.size() > 0);
     }
 
     @Test
@@ -42,9 +42,11 @@ public class CustomerServiceTest {
     @Test
     public void createCustomerTest() throws Exception {
         Map<String, Object> fieldMap = new HashMap<String, Object>();
-        fieldMap.put("name", "customer100");
+        fieldMap.put("name", "金基德");
         fieldMap.put("contact", "John");
         fieldMap.put("telephone", "1341324132");
+        fieldMap.put("email", "xxxx-900@1633.com");
+        fieldMap.put("remark", "嘻嘻欻欻嘻嘻");
         boolean result = customerService.createCustomer(fieldMap);
         Assert.assertTrue(result);
     }
@@ -59,7 +61,7 @@ public class CustomerServiceTest {
     }
 
     @Test
-    public void deleteCustomerTest() throws Exception{
+    public void deleteCustomerTest() throws Exception {
         Integer id = 1;
         boolean result = customerService.deleteCustomer(id);
         Assert.assertTrue(result);
