@@ -44,9 +44,9 @@ public class CustomerServiceTest {
         Map<String, Object> fieldMap = new HashMap<String, Object>();
         fieldMap.put("name", "金基德");
         fieldMap.put("contact", "John");
-        fieldMap.put("telephone", "1341324132");
-        fieldMap.put("email", "xxxx-900@1633.com");
-        fieldMap.put("remark", "嘻嘻欻欻嘻嘻");
+        fieldMap.put("telephone", "1241324132");
+        fieldMap.put("email", "kinkikid900@1633.com");
+        fieldMap.put("remark", "《春夏秋冬又一春》");
         boolean result = customerService.createCustomer(fieldMap);
         Assert.assertTrue(result);
     }
