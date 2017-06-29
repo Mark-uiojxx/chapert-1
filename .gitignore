@@ -9,3 +9,6 @@ target/
 .classpath
 .project
 Servers/
+#notes#
+README.md
+Note.md
